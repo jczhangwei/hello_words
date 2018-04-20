@@ -1,7 +1,3 @@
-/**
- * Created by zhangwei on 2018/4/20.
- */
-
 import {Page} from "./page";
 import {MainScene} from "./main_scene";
 
@@ -21,12 +17,8 @@ cc.Class({
 
     },
 
-    on_mission_item: function(btn, event) {
-
-    },
-
-    on_btn_new: function(btn, event) {
-        MainScene.show_page("create_mission_page");
+    on_btn_cancel: function(btn, event) {
+        MainScene.show_page("main_page");
     }
 
 });
