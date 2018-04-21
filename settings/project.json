@@ -11,8 +11,8 @@
       true
     ]
   ],
-  "design-resolution-height": 1920,
-  "design-resolution-width": 1080,
+  "design-resolution-height": 2960,
+  "design-resolution-width": 1440,
   "excluded-modules": [
     "TiledMap",
     "Spine Skeleton",
@@ -33,6 +33,5 @@
     "width": 960
   },
   "use-customize-simulator": false,
-  "use-project-simulator-setting": false,
-  "start-scene": "current"
+  "use-project-simulator-setting": false
 }
