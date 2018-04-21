@@ -19,6 +19,10 @@ cc.Class({
 
     on_btn_cancel: function(btn, event) {
         MainScene.show_page("main_page");
+    },
+
+    on_btn_add_library: function(btn, event) {
+        MainScene.show_page("library_selection_page")
     }
 
 });
