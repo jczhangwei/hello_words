@@ -1,4 +1,3 @@
-
 let instance;
 
 let MainScene = cc.Class({
@@ -9,36 +8,52 @@ let MainScene = cc.Class({
     },
 
     // use this for initialization
-    onLoad: function () {
+    onLoad: function() {
         instance = this;
         this.pages = this.node.getChildByName("pages");
     },
 
-    start: function () {
+    start: function() {
         MainScene.show_page("main_page");
     },
 
     // called every frame
-    update: function (dt) {
+    update: function(dt) {
 
     },
 });
 
+function show_page_node(page_node) {
+    for(let key in instance.pages.children) {
+        let child = instance.pages.children[key];
+        child.active = false;
+    }
+
+    page_node.active = true;
+}
+
 MainScene.show_page = function(page_name) {
     console.log("show page " + page_name);
-    if(instance){
+    if(instance) {
         let page_node = instance.pages.getChildByName(page_name);
-        if(page_node){
-            if(page_node.active){
+        if(page_node) {
+            if(page_node.active) {
                 return;
             }
 
-            for(let key in instance.pages.children){
-                let child = instance.pages.children[key];
-                child.active = false;
-            }
+            show_page_node(page_node);
+        } else {
+            cc.loader.loadRes("pages/" + page_name, function(err, prefab) {
+                if(prefab && typeof prefab == "object") {
+                    let node = cc.instantiate(prefab);
+                    if(node) {
+                        instance.pages.addChild(node);
+                        show_page_node(node);
 
-            page_node.active = true;
+                    }
+                }
+
+            });
         }
     }
 };
