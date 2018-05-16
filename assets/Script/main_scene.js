@@ -1,4 +1,5 @@
 let instance;
+let Manager = require("manager");
 
 let MainScene = cc.Class({
     extends: cc.Component,
@@ -11,10 +12,16 @@ let MainScene = cc.Class({
     onLoad: function() {
         instance = this;
         this.pages = this.node.getChildByName("pages");
+
+        Manager.instance.loadVocabulary(function() {
+            cc.log(Manager.instance.vocabulary);
+            MainScene.show_page("main_page");
+
+        }.bind(this))
     },
 
     start: function() {
-        MainScene.show_page("main_page");
+
     },
 
     // called every frame
