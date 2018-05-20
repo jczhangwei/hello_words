@@ -14,7 +14,8 @@ let MainScene = cc.Class({
         this.pages = this.node.getChildByName("pages");
 
         Manager.instance.loadVocabulary(function() {
-            cc.log(Manager.instance.vocabulary);
+            cc.log(Manager.instance.words);
+            cc.log(Manager.instance.info);
             MainScene.show_page("main_page");
 
         }.bind(this))
