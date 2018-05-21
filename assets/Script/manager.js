@@ -1,5 +1,13 @@
+// let _ = require("underscore");
+
+/**
+ * learn_type, 每个单词的学习状态， state的值对应下一步需要做的阶段
+ * @type {Function|*}
+ */
+
 let LearnSection = {
-    PASS      : {code: -1, name: "pass", near_time: 0, far_time: 0},
+    PASS      : {code: -10, name: "pass", near_time: 0, far_time: 0},
+    NOT_START : {code: -1, name: "not_start", near_time: 0, far_time: 0},
     LEARN     : {code: 0, name: "learn", near_time: 0, far_time: 0},
     REVIEW_M5 : {code: 1, name: "review_m5", near_time: 0, far_time: 0},
     REVIEW_M30: {code: 2, name: "review_m30", near_time: 0, far_time: 0},
@@ -9,7 +17,14 @@ let LearnSection = {
     REVIEW_D8 : {code: 6, name: "review_d8", near_time: 168, far_time: 192},
     REVIEW_D15: {code: 7, name: "review_d15", near_time: 336, far_time: 360},
     REVIEW_D30: {code: 8, name: "review_d30", near_time: 696, far_time: 720},
+    FINISH    : {code: 9, name: "finish", near_time: 0, far_time: 0},
 
+};
+
+let LearnStatus = {
+    NOT_START      : "not_start",
+    LEARN_NEW_WORDS: "learn_new_words",
+    REVIEW         : "review",
 };
 
 let lesson = {
@@ -32,48 +47,51 @@ let info   = {
 
 };
 
-/**
- * learn_type 为空就是还没开始学， state的值对应刚刚完成了那一阶段
- * @type {Function|*}
- */
-
-let k = cc.Sprite.extend({
-    a:3
-});
-
-console.log(k);
-
-cc.Class.extend({
-
-});
-
 let Manager = cc.Class({
-
-    properties: {
-
-    },
+    name   : "Manager",
+    extends: cc.Class,
 
     ctor: function() {
         this.init();
-        this.info = {
-            lessons: [
-                {
-                    words: {
-                        abandon: {section: LearnSection.LEARN.name, learn_time: []},
-                        /*.....*/
-                    },
+        this._cur_lesson   = null;
+        this._learn_status = null;
 
-                    groups: [
+        this.words = null;
+        this.info  = {
+            cur_lesson: "gre",
+            lessons   : [
+                {
+                    name     : "gre",
+                    libraries: [
+                        "gre"
+                    ],
+                    groups   : [
                         {
                             words: ["abandon"]
                         },
                         /*.....*/
-                    ]
+                    ],
+                    words    : {
+                        pass      : {},
+                        not_start : {abandon: {section: LearnSection.LEARN.name, learn_time: []}},
+                        learn     : {},
+                        review_m5 : {},
+                        review_m30: {},
+                        review_h12: {},
+                        review_d2 : {},
+                        review_d4 : {},
+                        review_d8 : {},
+                        review_d15: {},
+                        review_d30: {},
+                        finish    : {},
+                    }
                 }
             ] //Array of lessons
 
         }
     },
+
+    properties: {},
 
     init: function() {
         this.initLoader();
@@ -108,16 +126,6 @@ let Manager = cc.Class({
 
     },
 
-    // loadVocabulary: function(callback) {
-    //     cc.loader.loadRes("db/words.xlsx", function(err, data) {
-    //         window.gre = this.vocabulary = XLSX.read(data, {type: "array"});
-    //
-    //         if(callback) {
-    //             callback();
-    //         }
-    //     }.bind(this));
-    // },
-
     loadVocabulary: function(callback) {
         cc.loader.loadRes("db/words.json", function(err, data) {
             window.words = this.words = data;
@@ -132,22 +140,131 @@ let Manager = cc.Class({
         return this.vocabulary.SheetNames;
     },
 
-    getWordCount: function(sheet_name) {
+    /**
+     * 获得一个词典的单词个数
+     * @param sheet_name
+     * @returns {*}
+     */
+    getWordCount: function(vocabulary_name) {
 
-        let sheet = this.vocabulary.Sheets[sheet_name];
-        if(sheet) {
-            return sheet.length;
+        let item = _.find(this.words.list, function(item) {
+            return item.name == vocabulary_name;
+        });
 
-        }
+        return item.words.length;
+    },
 
-        return 0;
+    /**
+     * 获得一个词典的单词列表
+     * @param vocabulary_name
+     * @returns {*|undefined}
+     */
+    getWordsForVocabulary: function(vocabulary_name) {
+        let item = _.find(this.words.list, function(item) {
+            return item.name == vocabulary_name;
+        });
+
+        return _.union(item.words);
+    },
+
+    /**
+     * 获得单词库列表信息
+     */
+    getVoculbaryInfos: function() {
+        _.map(this.words.list, function(item) {
+            return {
+                name  : item.name,
+                length: item.words.length
+            }
+        });
+    },
+
+    /**
+     * 获取已创建的课程列表
+     * @returns {*[]|*}
+     */
+    getLessions: function() {
+        return this.info.lessons;
+    },
+
+    // 开始学习过程
+    start_to_learn: function(lesson_name) {
+        this._cur_lesson = lesson_name;
 
     },
+
+    /**
+     * 创建课程，在课程创建页面点击确定后执行
+     * @param name
+     * @param libraries
+     */
+    createLesson: function(name, libraries) {
+        let lesson = {
+            name     : name,
+            libraries: libraries,
+            groups   : [],
+            words    : {
+                pass      : [],
+                not_start : [],
+                learn     : [],
+                review_m5 : [],
+                review_m30: [],
+                review_h12: [],
+                review_d2 : [],
+                review_d4 : [],
+                review_d8 : [],
+                review_d15: [],
+                review_d30: [],
+                finish    : [],
+            }
+        };
+
+        _.each(function(library_name) {
+            lesson.words.not_start = _.union(lesson.words.not_start, this.getWordsForVocabulary(library_name));
+        });
+
+        this.info.lessons.push(lesson)
+
+    },
+
+    /**
+     * 在学习过程中，得到下一个要学的单词
+     */
+    getNewWord() {
+        // todo
+        if(this._learn_status != LearnStatus.LEARN_NEW_WORDS) {
+
+        }
+    },
+
+    /**
+     * 获取课程中相应学习状态的单词列表
+     * @param lesson_name
+     * @param learn_sections
+     */
+    getWordsOfLessonByLearnSection(lesson_name, learn_sections) {
+        if(!(learn_sections instanceof Array)) {
+            learn_sections = [learn_sections]
+        }
+        let lesson = _.find(this.info.lessons, function(item) {
+            return item.name === lesson_name;
+        });
+
+        if(lesson) {
+            let res = [];
+            _.each(learn_sections, function(learn_section) {
+                res = _.union(res, lesson.words[learn_section]);
+            });
+            return res;
+        }
+    }
+
+
 
 
 });
 
 Manager.instance = new Manager();
 
-export {Manager}
+export {Manager, LearnSection, LearnStatus}
 module.exports = Manager;
