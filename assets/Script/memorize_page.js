@@ -11,7 +11,8 @@ cc.Class({
     },
 
     ctor() {
-
+        this.cur_word_list  = [];
+        this.cur_word_index = -1;
     },
 
     onLoad() {
@@ -35,10 +36,30 @@ cc.Class({
     update(dt) {},
 
     on_btn_previous() {
-        this.card_item.show_word(Manager.instance.getNextWord())
+        this.to_previous_word();
     },
 
     on_btn_next() {
-        this.card_item.show_word(Manager.instance.getNextWord())
-    }
+        this.to_next_word();
+    },
+
+    to_next_word() {
+        let word;
+        if(this.cur_word_index >= this.cur_word_list.length - 1) {
+            word = Manager.instance.getNextWord();
+            this.cur_word_list.push(word);
+            this.cur_word_index = this.cur_word_index - 1;
+        } else {
+            word = this.cur_word_list[Math.min(++this.cur_word_index, this.cur_word_list.length - 1)];
+        }
+
+        this.card_item.show_word(word)
+    },
+
+    to_previous_word() {
+        let word = this.cur_word_list[Math.max(--this.cur_word_index, 0)];
+        this.card_item.show_word(word)
+    },
+
+
 });
