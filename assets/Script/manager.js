@@ -1,4 +1,10 @@
 // let _ = require("underscore");
+/**
+ * 每个完成30分钟复习的一批单词为一个大组 group, 每个完成5分钟复习的组为一个小组，
+ * 小组是临时的，不保存， 完成30分钟复习以后的大组保存为一个 group，
+ * 以后按照大组来复习
+ *
+ */
 
 /**
  * learn_type, 每个单词的学习状态， state的值对应下一步需要做的阶段
@@ -56,7 +62,7 @@ let Manager = cc.Class({
         this._cur_lesson   = null;
         this._learn_status = null;
 
-        this.words = null;
+        this.library = null;
         this.info  = {
             cur_lesson: "gre",
             lessons   : [
@@ -127,8 +133,8 @@ let Manager = cc.Class({
     },
 
     loadVocabulary: function(callback) {
-        cc.loader.loadRes("db/words.json", function(err, data) {
-            window.words = this.words = data;
+        cc.loader.loadRes("db/library.json", function(err, data) {
+            window.library = this.library = data;
 
             if(callback) {
                 callback();
@@ -161,7 +167,7 @@ let Manager = cc.Class({
      */
     getWordsForVocabulary: function(vocabulary_name) {
         let item = _.find(this.words.list, function(item) {
-            return item.name == vocabulary_name;
+            return item.name === vocabulary_name;
         });
 
         return _.union(item.words);
@@ -220,7 +226,7 @@ let Manager = cc.Class({
         };
 
         _.each(function(library_name) {
-            lesson.words.not_start = _.union(lesson.words.not_start, this.getWordsForVocabulary(library_name));
+            lesson.words.learn = _.union(lesson.words.not_start, this.getWordsForVocabulary(library_name));
         });
 
         this.info.lessons.push(lesson)
@@ -230,11 +236,29 @@ let Manager = cc.Class({
     /**
      * 在学习过程中，得到下一个要学的单词
      */
-    getNewWord() {
+    getNextWord() {
         // todo
-        if(this._learn_status != LearnStatus.LEARN_NEW_WORDS) {
+        if(this._learn_status === LearnStatus.LEARN_NEW_WORDS) {
+            return this._cur_lesson.words.learn.shift();
+        } else {
 
         }
+    },
+
+    /**
+     * todo
+     * 在复习过程中，得到下一个要复习的单词
+     */
+    getNextReviewWord() {
+
+    },
+
+    /**
+     * todo
+     * 看完一个单词(无论是在学习还是在复习
+     */
+    onReadWord(word) {
+
     },
 
     /**
@@ -257,9 +281,15 @@ let Manager = cc.Class({
             });
             return res;
         }
+    },
+
+    getWordDesc(word) {
+        let w = this.library.words[word];
+        if(w){
+        return w.desc1;
+
+        }
     }
-
-
 
 
 });

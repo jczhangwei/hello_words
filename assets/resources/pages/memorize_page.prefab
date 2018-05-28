@@ -1094,13 +1094,16 @@
     "_N$horizontalDirection": 0
   },
   {
-    "__type__": "24be0YDMfFKVK2ts3b+ERIh",
+    "__type__": "1e783+31BZIN6iD0Umkti/m",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 1
     },
-    "_enabled": true
+    "_enabled": true,
+    "layout_card": {
+      "__id__": 10
+    }
   },
   {
     "__type__": "cc.Widget",
