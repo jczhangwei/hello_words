@@ -1,8 +1,10 @@
+import {UIBase} from "../ui_base";
+
 let instance;
-let Manager = require("manager");
+import {Manager} from "../manager/manager";
 
 let MainScene = cc.Class({
-    extends: cc.Component,
+    extends: UIBase,
 
     properties: {
         pages: cc.Node
