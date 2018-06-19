@@ -29,10 +29,13 @@
       },
       {
         "__id__": 11
+      },
+      {
+        "__id__": 12
       }
     ],
     "_prefab": {
-      "__id__": 12
+      "__id__": 13
     },
     "_id": "",
     "_opacity": 255,
@@ -378,6 +381,21 @@
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 1
+    }
+  },
+  {
+    "__type__": "dd9b5M3pQFBqopl6zisqgF/",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "txt_name": {
+      "__id__": 3
+    },
+    "txt_desc": {
+      "__id__": 7
     }
   },
   {

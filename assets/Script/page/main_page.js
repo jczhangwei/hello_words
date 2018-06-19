@@ -26,7 +26,7 @@ cc.Class({
 
     refreshList() {
         let lessons = Manager.instance.info.lessons;
-        cc.loader.loadRes("items/mission_item", function(err, prefab) {
+        cc.loader.loadRes("items/mission_item", (err, prefab) => {
             lessons.forEach(lesson => {
                 let newNode = cc.instantiate(prefab);
                 this.list_content.addChild(newNode);

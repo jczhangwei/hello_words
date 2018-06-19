@@ -63,11 +63,12 @@ let Manager = cc.Class({
         this._learn_status = null;
 
         this.library = null;
-        this.info  = {
+        this.info    = {
             cur_lesson: "gre",
             lessons   : [
                 {
                     name     : "gre",
+                    desc     : "gre",
                     libraries: [
                         "gre"
                     ],
@@ -285,8 +286,8 @@ let Manager = cc.Class({
 
     getWordDesc(word) {
         let w = this.library.words[word];
-        if(w){
-        return w.desc1;
+        if(w) {
+            return w.desc1;
 
         }
     }
@@ -297,4 +298,3 @@ let Manager = cc.Class({
 Manager.instance = new Manager();
 
 export {Manager, LearnSection, LearnStatus}
-module.exports = Manager;

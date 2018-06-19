@@ -2,8 +2,7 @@ import {WordCardItem} from "../item/word_card_item";
 import {Manager} from "../manager/manager";
 import {Page} from "./page";
 
-cc.Class({
-    name   : "memorize_page",
+let MemorizePage = cc.Class({
     extends: Page,
 
     properties: {

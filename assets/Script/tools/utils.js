@@ -1,4 +1,4 @@
-Utils = {
+let Utils = {
 
 };
 
