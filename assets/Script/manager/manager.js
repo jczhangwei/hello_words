@@ -7,7 +7,7 @@
  */
 
 /**
- * learn_type, 每个单词的学习状态， state的值对应下一步需要做的阶段
+ * learn_type, 每个单词的学习状态， state的值对应当前已完成的阶段，state值为空等同于 NOT_START
  * @type {Function|*}
  */
 
@@ -57,31 +57,56 @@ let Manager = cc.Class({
     name   : "Manager",
     extends: cc.Class,
 
-    ctor: function() {
+    ctor() {
         this.init();
+        this.library = null;
+
         this._cur_lesson   = null;
         this._learn_status = null;
 
-        this.library = null;
-        this.info    = {
-            cur_lesson: "gre",
-            lessons   : [
+        this._start_learn_time        = 0;
+        this._little_group_start_time = 0;
+
+
+        // 在学习过程中每五分钟一个的小组，临时数据，不保存
+        this._little_groups = [];
+
+        this.info = {
+            cur_lesson_name: null,
+            lessons        : [
                 {
-                    name     : "gre",
-                    desc     : "gre",
-                    libraries: [
+                    name      : "gre",
+                    desc      : "GRE",
+                    libraries : [
                         "gre"
                     ],
-                    groups   : [
+                    // 每次30分钟学完的单词记为一组
+                    groups    : [
                         {
                             words: ["abandon"]
                         },
                         /*.....*/
                     ],
-                    words    : {
+                    words_info: {
+                        abandon: {
+                            learn_section: LearnSection.NOT_START.name,
+                            learn_time   : {
+                                review_m5 : null,
+                                review_m30: null,
+                                review_h12: null,
+                                review_d2 : null,
+                                review_d4 : null,
+                                review_d8 : null,
+                                review_d15: null,
+                                review_d30: null,
+                            }
+                        }
+                    },
+                    words     : {
+
                         pass      : {},
-                        not_start : {abandon: {section: LearnSection.LEARN.name, learn_time: []}},
-                        learn     : {},
+                        not_start : {},
+                        learn     : ["abandon"],
                         review_m5 : {},
                         review_m30: {},
                         review_h12: {},
@@ -95,16 +120,20 @@ let Manager = cc.Class({
                 }
             ] //Array of lessons
 
-        }
+        };
+
+        // init 其实应该做在创建课程的时候
+        // this.info.lessons[0].words.not_start = this.getWordsForVocabulary("gre");
+
     },
 
     properties: {},
 
-    init: function() {
+    init() {
         this.initLoader();
     },
 
-    initLoader: function() {
+    initLoader() {
         let arrayBufferHandler = function(item, callback) {
             let url = item.url;
             let xhr = cc.loader.getXMLHttpRequest();
@@ -133,9 +162,10 @@ let Manager = cc.Class({
 
     },
 
-    loadVocabulary: function(callback) {
+    loadVocabulary(callback) {
         cc.loader.loadRes("db/library.json", function(err, data) {
             window.library = this.library = data;
+            this.info.lessons[0].words.not_start = this.getWordsForVocabulary("gre");
 
             if(callback) {
                 callback();
@@ -143,7 +173,7 @@ let Manager = cc.Class({
         }.bind(this));
     },
 
-    getVocabularyNames: function() {
+    getVocabularyNames() {
         return this.vocabulary.SheetNames;
     },
 
@@ -152,9 +182,9 @@ let Manager = cc.Class({
      * @param sheet_name
      * @returns {*}
      */
-    getWordCount: function(vocabulary_name) {
+    getWordCount(vocabulary_name) {
 
-        let item = _.find(this.words.list, function(item) {
+        let item = _.find(this.library.list, function(item) {
             return item.name == vocabulary_name;
         });
 
@@ -166,8 +196,8 @@ let Manager = cc.Class({
      * @param vocabulary_name
      * @returns {*|undefined}
      */
-    getWordsForVocabulary: function(vocabulary_name) {
-        let item = _.find(this.words.list, function(item) {
+    getWordsForVocabulary(vocabulary_name) {
+        let item = _.find(this.library.list, function(item) {
             return item.name === vocabulary_name;
         });
 
@@ -177,7 +207,7 @@ let Manager = cc.Class({
     /**
      * 获得单词库列表信息
      */
-    getVoculbaryInfos: function() {
+    getVoculbaryInfos() {
         _.map(this.words.list, function(item) {
             return {
                 name  : item.name,
@@ -194,43 +224,53 @@ let Manager = cc.Class({
         return this.info.lessons;
     },
 
-    // 开始学习过程
-    start_to_learn: function(lesson_name) {
-        this._cur_lesson = lesson_name;
-
-    },
-
     /**
      * 创建课程，在课程创建页面点击确定后执行
      * @param name
      * @param libraries
      */
     createLesson: function(name, libraries) {
-        let lesson = {
-            name     : name,
-            libraries: libraries,
-            groups   : [],
-            words    : {
-                pass      : [],
-                not_start : [],
-                learn     : [],
-                review_m5 : [],
-                review_m30: [],
-                review_h12: [],
-                review_d2 : [],
-                review_d4 : [],
-                review_d8 : [],
-                review_d15: [],
-                review_d30: [],
-                finish    : [],
-            }
-        };
+        // let lesson = {
+        //     name        : name,
+        //     libraries   : libraries,
+        //     groups      : [],
+        //     target_words: [],
+        //     words       : {
+        //         pass      : [],
+        //         not_start : [],
+        //         learn     : [],
+        //         review_m5 : [],
+        //         review_m30: [],
+        //         review_h12: [],
+        //         review_d2 : [],
+        //         review_d4 : [],
+        //         review_d8 : [],
+        //         review_d15: [],
+        //         review_d30: [],
+        //         finish    : [],
+        //     }
+        // };
+        //
+        // _.each(function(library_name) {
+        //     lesson.words.learn = _.union(lesson.words.not_start, this.getWordsForVocabulary(library_name));
+        // });
+        //
+        // _.each(function(library_name) {
+        //     lesson.target_words = this.getWordsForVocabulary(library_name);
+        // });
+        //
+        // this.info.lessons.push(lesson)
 
-        _.each(function(library_name) {
-            lesson.words.learn = _.union(lesson.words.not_start, this.getWordsForVocabulary(library_name));
-        });
+    },
 
-        this.info.lessons.push(lesson)
+    startLesson(lesson_name, is_review) {
+        this._learn_status        = is_review ? LearnStatus.REVIEW : LearnStatus.LEARN_NEW_WORDS;
+        this.info.cur_lesson_name = lesson_name;
+        this._cur_lesson          = _.findWhere(this.info.lessons, {name: lesson_name});
+        this._little_groups       = [];
+    },
+
+    hasWordsNeedReview() {
 
     },
 
@@ -238,11 +278,46 @@ let Manager = cc.Class({
      * 在学习过程中，得到下一个要学的单词
      */
     getNextWord() {
-        // todo
         if(this._learn_status === LearnStatus.LEARN_NEW_WORDS) {
-            return this._cur_lesson.words.learn.shift();
-        } else {
+            return this.getNextLearnWord();
+        } else if(this._learn_status === LearnStatus.REVIEW) {
+            return this.getNextReviewWord();
+        }
+    },
 
+    finishLittleGroup() {
+        this._little_groups.push([]);
+
+    },
+
+    /**
+     * todo
+     * 在学习过程中，得到下一个要学习的单词
+     */
+    getNextLearnWord() {
+        if(this._learn_status === LearnStatus.LEARN_NEW_WORDS) {
+            let word = this._cur_lesson.words.not_start.shift();
+            if(!word) {
+                return;
+            }
+
+            // add to group
+            let little_group = this._little_groups[this._little_groups.length - 1];
+            if(!little_group) {
+                little_group = [];
+                this._little_groups.push(little_group);
+            }
+            little_group.push(word);
+
+            // add learn progress info
+            this._cur_lesson.words_info[word] = {
+                learn_section: LearnSection.NOT_START.name,
+                learn_time   : {
+                    review_m5: this.getCurTime(),
+                }
+            };
+
+            return word;
         }
     },
 
@@ -252,6 +327,10 @@ let Manager = cc.Class({
      */
     getNextReviewWord() {
 
+    },
+
+    getCurTime: function() {
+        return Date.now();
     },
 
     /**

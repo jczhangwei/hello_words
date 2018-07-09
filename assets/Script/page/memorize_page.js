@@ -5,9 +5,7 @@ import {Page} from "./page";
 let MemorizePage = cc.Class({
     extends: Page,
 
-    properties: {
-        layout_card: cc.Node
-    },
+    properties: {},
 
     ctor() {
         this.cur_word_list  = [];
@@ -15,26 +13,41 @@ let MemorizePage = cc.Class({
     },
 
     onLoad() {
-        cc.loader.loadRes("items/word_card_item", function(err, prefab) {
+        this._super();
+
+        this.layout_card = this.node.getChildByName("layout_card");
+        cc.loader.loadRes("items/word_card_item", (err, prefab) => {
             if(prefab && typeof prefab === "object") {
                 let node = cc.instantiate(prefab);
                 if(node) {
                     this.card_item = node.getComponent(WordCardItem);
                     this.layout_card.addChild(node);
+                    this.card_item.show_word(Manager.instance.getNextWord());
 
                 }
             }
 
-        }.bind(this));
+        });
+
     },
 
     start() {
-        this.card_item.show_word(Manager.instance.getNextWord())
+
     },
 
     update(dt) {},
 
+    start_play() {
+        if(!this.card_item) {
+            return;
+        }
+        this.card_item.show_word(Manager.instance.getNextWord());
+    },
+
     on_btn_previous() {
+        if(!this.card_item) {
+            return;
+        }
         this.to_previous_word();
     },
 
@@ -52,7 +65,7 @@ let MemorizePage = cc.Class({
             word = this.cur_word_list[Math.min(++this.cur_word_index, this.cur_word_list.length - 1)];
         }
 
-        this.card_item.show_word(word)
+        this.card_item.show_word(word);
     },
 
     to_previous_word() {
