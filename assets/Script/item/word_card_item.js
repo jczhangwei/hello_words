@@ -22,7 +22,7 @@ let WordCardItem = cc.Class({
     show_word(word) {
         console.log("word car show word: " + word);
         this.txt_word.string = word;
-        this.txt_desc = Manager.instance.getWordDesc(word);
+        this.txt_desc.string = Manager.instance.getWordDesc(word);
     }
 
 });
