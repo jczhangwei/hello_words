@@ -8,8 +8,8 @@ let MemorizePage = cc.Class({
     properties: {},
 
     ctor() {
-        this.cur_word_list  = [];
-        this.cur_word_index = -1;
+        this.cur_word_list      = [];
+        this.cur_word_index     = -1;
     },
 
     onLoad() {
@@ -60,7 +60,7 @@ let MemorizePage = cc.Class({
         if(this.cur_word_index >= this.cur_word_list.length - 1) {
             word = Manager.instance.getNextWord();
             this.cur_word_list.push(word);
-            this.cur_word_index = this.cur_word_index - 1;
+            this.cur_word_index++;
         } else {
             word = this.cur_word_list[Math.min(++this.cur_word_index, this.cur_word_list.length - 1)];
         }
@@ -69,9 +69,13 @@ let MemorizePage = cc.Class({
     },
 
     to_previous_word() {
-        let word = this.cur_word_list[Math.max(--this.cur_word_index, 0)];
-        this.card_item.show_word(word)
+        this.cur_word_index = Math.max(--this.cur_word_index, 0);
+        let word            = this.cur_word_list[this.cur_word_index];
+        this.card_item.show_word(word);
     },
 
+    finsh_group() {
+
+    }
 
 });
