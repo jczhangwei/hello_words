@@ -30,27 +30,9 @@ let LearnSection = {
 let LearnStatus = {
     NOT_START      : "not_start",
     LEARN_NEW_WORDS: "learn_new_words",
-    REVIEW         : "review",
-};
-
-let lesson = {
-    words: {
-        abandon: {section: LearnSection.LEARN.name, learn_time: []},
-        /*.....*/
-    },
-
-    groups: [
-        {
-            words: ["abandon"]
-        },
-        /*.....*/
-    ]
-};
-let info   = {
-    lessons: [
-        lesson
-    ] //Array of lessons
-
+    REVIEW5        : "review5",
+    REVIEW30       : "review30",
+    REVIEW_AFTER   : "review_after",
 };
 
 let Manager = cc.Class({
@@ -86,10 +68,11 @@ let Manager = cc.Class({
                     ],
 
                     // 下面几个数据是咋学习或复习过程中的数据
-                    learn_status: LearnStatus.NOT_START,
-                    cur_group   : [],
+                    learn_status   : LearnStatus.NOT_START,
+                    cur_group      : [],
+                    cur_group_index: 0,
                     // 每次30分钟学完的单词记为一组
-                    groups      : [
+                    groups         : [
                         // {
                         //     words: ["abandon"]
                         // },
@@ -272,45 +255,94 @@ let Manager = cc.Class({
 
     },
 
-    hasWordsNeedReview() {
+    getLessonByName(lesson_name) {
+        let lesson = _.findWhere(this.info.lessons, {name: lesson_name});
+        if(!lesson) {
+            console.warn("Error: can't find lesson by name " + lesson_name);
+            return;
+        }
+
+        return lesson;
+    },
+
+    isWordsNeedReview() {
 
     },
 
-    isLessionNotFinish(lesson_name) {
+    isLessonNotFinish(lesson_name) {
         let lesson = _.findWhere(this.info.lessons, {name: lesson_name});
         return lesson && lesson.learn_status && lesson.learn_status !== LearnStatus.NOT_START;
     },
 
-    startLesson(lesson_name, is_review) {
-        // this._learn_status        = is_review ? LearnStatus.REVIEW : LearnStatus.LEARN_NEW_WORDS;
+    getLessonStatus(lesson_name) {
+        let lesson = _.findWhere(this.info.lessons, {name: lesson_name});
+        return lesson && lesson.learn_status;
+    },
+
+    startLesson(lesson_name, learn_status) {
+        learn_status = learn_status || LearnStatus.LEARN_NEW_WORDS;
+        let lesson   = this.getLessonByName(lesson_name);
+        if(!lesson) {
+            return;
+        }
+
         this.info.cur_lesson_name = lesson_name;
         let cur_lesson            = this._cur_lesson = _.findWhere(this.info.lessons, {name: lesson_name});
-        if(cur_lesson.learn_status && cur_lesson.learn_status !== LearnStatus.NOT_START) {
-
+        let not_finish = cur_lesson.learn_status && cur_lesson.learn_status !== LearnStatus.NOT_START;
+        if(!not_finish || cur_lesson.learn_status !== learn_status) {
+            this._cur_lesson.learn_status    = learn_status;
+            this._cur_lesson.cur_group       = [];
+            this._cur_lesson.groups          = [];
+            this._cur_lesson.cur_group_index = 0;
         }
-        this._cur_lesson.learn_status = is_review ? LearnStatus.REVIEW : LearnStatus.LEARN_NEW_WORDS;
-        this._cur_lesson.cur_group = [];
-        this._cur_lesson.groups    = [];
     },
 
     toNextGroup: function() {
         this._cur_lesson.cur_group = [];
         this._cur_lesson.groups.push(this._cur_lesson.cur_group);
+        this._cur_lesson.cur_group_index++;
+    },
+
+    reviewGroup: function() {
+        this._cur_lesson.learn_status = LearnStatus.REVIEW5;
+
+    },
+
+    reviewGroups: function() {
+
     },
 
     /**
      * 在学习过程中，得到下一个要学的单词
      */
     getNextWord() {
-        if(!this._cur_lesson){
+        if(!this._cur_lesson) {
             return;
         }
 
         if(this._cur_lesson._learn_status === LearnStatus.LEARN_NEW_WORDS) {
             return this.getNextLearnWord();
-        } else if(this._cur_lesson._learn_status === LearnStatus.REVIEW) {
+        } else if(this._cur_lesson._learn_status === LearnStatus.REVIEW_AFTER) {
             return this.getNextReviewWord();
         }
+    },
+
+    getGroupWord(group_index, word_index) {
+        if(!this._cur_lesson) {
+            console.warn("Error: can't find current lesson.");
+            return;
+        }
+
+        let group = this._cur_lesson.groups[group_index];
+        if(group){
+            return group[word_index];
+        }
+
+    },
+
+    // set word reviewed, upgrade its section
+    reviewWord(word) {
+        // todo
     },
 
     /**

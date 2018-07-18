@@ -38,7 +38,7 @@ let MissionItem = cc.Class({
     },
 
     on_mission_item(){
-        if(Manager.instance.hasWordsNeedReview()){
+        if(Manager.instance.isWordsNeedReview()){
 
         }
         Manager.instance.startLesson(this._lession_name);
