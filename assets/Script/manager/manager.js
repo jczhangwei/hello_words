@@ -43,9 +43,8 @@ let Manager = cc.Class({
         this.init();
         this.library = null;
 
-        this._cur_lesson   = null;
-        this._cur_group    = null;
-        this._learn_status = null;
+        this._cur_lesson = null;
+        this._cur_group  = null;
 
         this._start_learn_time = 0;
         this._group_start_time = 0;
@@ -67,17 +66,17 @@ let Manager = cc.Class({
                         "gre"
                     ],
 
-                    // 下面几个数据是咋学习或复习过程中的数据
-                    learn_status   : LearnStatus.NOT_START,
-                    cur_group      : [],
-                    cur_group_index: 0,
-                    // 每次30分钟学完的单词记为一组
-                    groups         : [
-                        // {
-                        //     words: ["abandon"]
-                        // },
-                        /*.....*/
-                    ],
+                    // // 下面几个数据是咋学习或复习过程中的数据
+                    // learn_status   : LearnStatus.NOT_START,
+                    // cur_group      : [],
+                    // cur_group_index: 0,
+                    // // 每次30分钟学完的单词记为一组
+                    // groups         : [
+                    //     // {
+                    //     //     words: ["abandon"]
+                    //     // },
+                    //     /*.....*/
+                    // ],
 
 
                     words_info: {
@@ -288,7 +287,7 @@ let Manager = cc.Class({
 
         this.info.cur_lesson_name = lesson_name;
         let cur_lesson            = this._cur_lesson = _.findWhere(this.info.lessons, {name: lesson_name});
-        let not_finish = cur_lesson.learn_status && cur_lesson.learn_status !== LearnStatus.NOT_START;
+        let not_finish = !cur_lesson.learn_status || cur_lesson.learn_status === LearnStatus.NOT_START;
         if(!not_finish || cur_lesson.learn_status !== learn_status) {
             this._cur_lesson.learn_status    = learn_status;
             this._cur_lesson.cur_group       = [];
@@ -312,6 +311,14 @@ let Manager = cc.Class({
 
     },
 
+    isCurGroupReviewed: function() {
+
+    },
+
+    idCurGroupsReviewed: function() {
+
+    },
+
     /**
      * 在学习过程中，得到下一个要学的单词
      */
@@ -320,9 +327,9 @@ let Manager = cc.Class({
             return;
         }
 
-        if(this._cur_lesson._learn_status === LearnStatus.LEARN_NEW_WORDS) {
+        if(this._cur_lesson.learn_status === LearnStatus.LEARN_NEW_WORDS) {
             return this.getNextLearnWord();
-        } else if(this._cur_lesson._learn_status === LearnStatus.REVIEW_AFTER) {
+        } else if(this._cur_lesson.learn_status === LearnStatus.REVIEW_AFTER) {
             return this.getNextReviewWord();
         }
     },
@@ -334,7 +341,7 @@ let Manager = cc.Class({
         }
 
         let group = this._cur_lesson.groups[group_index];
-        if(group){
+        if(group) {
             return group[word_index];
         }
 
@@ -350,31 +357,25 @@ let Manager = cc.Class({
      * 在学习过程中，得到下一个要学习的单词
      */
     getNextLearnWord() {
-        if(this._learn_status === LearnStatus.LEARN_NEW_WORDS) {
+        if(this._cur_lesson.learn_status === LearnStatus.LEARN_NEW_WORDS) {
             let word = this._cur_lesson.words.not_start.shift();
             if(!word || this.isGroupFinish() || this.isCourseFinish()) {
                 return;
             }
 
             // add to group
-            let cur_group = this._cur_lesson.cur_group;
-            if(!cur_group || this.isGroupFinish()) {
-                this._cur_lesson.cur_group = cur_group = [];
-                this._cur_lesson.groups = cur_group;
-            }
-            let little_group = cur_group[this._cur_group.length - 1];
+            let little_group = this._cur_lesson.cur_group;
             if(!little_group) {
-                little_group = [];
-                this._little_groups.push(little_group);
+                return;
             }
             little_group.push(word);
 
             // add learn progress info
+            let learn_time = {};
+            learn_time[LearnSection.LEARN.name] = this.getCurTime();
             this._cur_lesson.words_info[word] = {
-                learn_section: LearnSection.NOT_START.name,
-                learn_time   : {
-                    review_m5: this.getCurTime(),
-                }
+                learn_section: LearnSection.LEARN.name,
+                learn_time   : learn_time
             };
 
             return word;
@@ -386,7 +387,29 @@ let Manager = cc.Class({
      * 在复习过程中，得到下一个要复习的单词
      */
     getNextReviewWord() {
+        if(this._cur_lesson.learn_status === LearnStatus.LEARN_NEW_WORDS) {
+            let word = this._cur_lesson.words.not_start.shift();
+            if(!word || this.isGroupFinish() || this.isCourseFinish()) {
+                return;
+            }
 
+            // add to group
+            let little_group = this._cur_lesson.cur_group;
+            if(!little_group) {
+                return;
+            }
+            little_group.push(word);
+
+            // add learn progress info
+            let learn_time = {};
+            learn_time[LearnSection.LEARN.name] = this.getCurTime();
+            this._cur_lesson.words_info[word] = {
+                learn_section: LearnSection.LEARN.name,
+                learn_time   : learn_time
+            };
+
+            return word;
+        }
     },
 
     isGroupFinish() {

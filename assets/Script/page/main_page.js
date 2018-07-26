@@ -36,10 +36,6 @@ cc.Class({
         });
     },
 
-    on_mission_item: function(btn, event) {
-
-    },
-
     on_btn_new: function(btn, event) {
         MainScene.show_page("create_mission_page");
     }
