@@ -274,8 +274,21 @@ let Manager = cc.Class({
     },
 
     getLessonStatus(lesson_name) {
-        let lesson = _.findWhere(this.info.lessons, {name: lesson_name});
+        let lesson;
+        if(lesson_name) {
+            lesson = _.findWhere(this.info.lessons, {name: lesson_name});
+        } else {
+            lesson = this._cur_lesson;
+        }
         return lesson && lesson.learn_status;
+    },
+
+    getLearnStatus() {
+        return this._cur_lesson ? this.getLessonStatus() : LearnStatus.NOT_START;
+    },
+
+    getCurGroupIndex() {
+        return this._cur_lesson.cur_group_index;
     },
 
     startLesson(lesson_name, learn_status) {
@@ -304,7 +317,6 @@ let Manager = cc.Class({
 
     reviewGroup: function() {
         this._cur_lesson.learn_status = LearnStatus.REVIEW5;
-
     },
 
     reviewGroups: function() {
